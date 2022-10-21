@@ -1,0 +1,51 @@
+------------------------------------------------------------------------
+r1290 | phanx | 2010-04-16 05:06:16 +0000 (Fri, 16 Apr 2010) | 1 line
+Changed paths:
+   A /tags/1.30300.1290 (from /trunk:1289)
+
+Tagging as 1.30300.1290
+------------------------------------------------------------------------
+r1289 | Phanx | 2010-04-16 05:01:53 +0000 (Fri, 16 Apr 2010) | 2 lines
+Changed paths:
+   M /trunk/Grid.toc
+   M /trunk/GridFrame.lua
+
+- Update TOC for release
+- Kill trailing whitespaces with fire
+------------------------------------------------------------------------
+r1288 | greltok | 2010-04-03 08:29:19 +0000 (Sat, 03 Apr 2010) | 1 line
+Changed paths:
+   M /trunk/GridStatus.lua
+
+Removed name to guid backwards compatibility.
+------------------------------------------------------------------------
+r1287 | Phanx | 2010-03-30 10:50:19 +0000 (Tue, 30 Mar 2010) | 1 line
+Changed paths:
+   M /trunk/GridStatusHeals.lua
+
+- Ticket #298: there is no UNIT_HEALTH_MAX event; use UNIT_MAXHEALTH
+------------------------------------------------------------------------
+r1286 | funkydude | 2010-03-29 11:03:16 +0000 (Mon, 29 Mar 2010) | 1 line
+Changed paths:
+   M /trunk/Grid.toc
+
+don't try to load the healcom wrapper since it was removed, preventing a framexml "error".
+------------------------------------------------------------------------
+r1285 | greltok | 2010-03-28 06:57:36 +0000 (Sun, 28 Mar 2010) | 1 line
+Changed paths:
+   M /trunk/GridLayout.lua
+
+Update tab visibility on reset.
+------------------------------------------------------------------------
+r1284 | greltok | 2010-03-28 06:20:30 +0000 (Sun, 28 Mar 2010) | 1 line
+Changed paths:
+   M /trunk/GridFrame.lua
+
+Ticket 294 - Fixed StatusBar texture tiling.
+------------------------------------------------------------------------
+r1283 | funkydude | 2010-03-01 21:27:44 +0000 (Mon, 01 Mar 2010) | 1 line
+Changed paths:
+   M /trunk/.pkgmeta
+
+Remove healcomm3 wrapper, if anyone thinks it still deserves to be here feel free to come on irc and justify it to me.
+------------------------------------------------------------------------

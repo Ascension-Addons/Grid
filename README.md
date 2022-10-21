@@ -1,3 +1,3 @@
-# Addon Name
+# Grid
 
-This is the repository for <Addon Name>. Modified for Ascension.gg. 
+This is the repository for Grid. Modified for Ascension.gg. 
