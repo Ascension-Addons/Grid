@@ -286,7 +286,12 @@ GridStatus.options = {
 							GridStatus.db.profile.colors.PetColorType = v
 							GridStatus:TriggerEvent("Grid_ColorsChanged")
 						end,
-					validate = {["By Owner Class"] = L["By Owner Class"], ["By Creature Type"] = L["By Creature Type"], ["Using Fallback color"] = L["Using Fallback color"]},
+					validate = {
+                        ["By Owner Class"] = L["By Owner Class"],
+                        ["By Owner Primary stat"] = L["By Owner Primary stat"],
+                        ["By Creature Type"] = L["By Creature Type"],
+                        ["Using Fallback color"] = L["Using Fallback color"]
+                    },
 				},
 			},
 		},
@@ -575,30 +580,49 @@ end
 --}}}
 --{{{ Unit Colors
 
-function GridStatus:UnitColor(guid)
-	local unitid = GridRoster:GetUnitidByGUID(guid)
+local PRIMARY_STAT_COLOR_MAP = {
+    ["Primary Stat: Agility"] = { r = 1, g = 0.96, b = 0.41, a = 1 },
+    ["Primary Stat: Intellect"] = { r = 0.25, g = 0.78, b = 0.92, a = 1 },
+    ["Primary Stat: Spirit"] = { r = 1, g = 1, b = 1, a = 1 },
+    ["Primary Stat: Strength"] = { r = 0.78, g = 0.61, b = 0.43, a = 1 }
+}
 
+function GridStatus:GetUnitPrimaryStatColor(unitid)
+    for k, v in pairs(PRIMARY_STAT_COLOR_MAP) do
+        local name, _, _, _, _, _, _, _, _, _, _ = UnitBuff(unitid, k)
+        if name then
+            return v
+        end
+    end
+
+    return nil
+end
+
+function GridStatus:UnitColor(guid, settings)
+	local unitid = GridRoster:GetUnitidByGUID(guid)
 	if not unitid then
 		-- bad news if we can't get a unitid
 		return
 	end
 
 	local colors = self.db.profile.colors
-
 	local owner = GridRoster:GetOwnerUnitidByUnitid(unitid)
 
 	if owner then
 		-- if it has an owner, then it's a pet
-		local color_type = colors.PetColorType
-		if color_type == "By Owner Class" then
+		local petColorType = colors.PetColorType
+		if petColorType == "By Owner Class" then
 			local _, owner_class = UnitClass(owner)
 			if owner_class then
 				return colors[owner_class]
 			end
-
-		elseif color_type == "By Creature Type" then
+        elseif petColorType == "By Owner Primary stat" then
+            local psColor = self:GetUnitPrimaryStatColor(owner)
+            if psColor then
+                return psColor
+            end
+		elseif petColorType == "By Creature Type" then
 			local creature_type = UnitCreatureType(unitid)
-
 			-- note that creature_type is nil for Shadowfiends
 			if creature_type and colors[creature_type] then
 				return colors[creature_type]
@@ -608,10 +632,19 @@ function GridStatus:UnitColor(guid)
 		return colors.UNKNOWN_PET
 	end
 
-	local _, class = UnitClass(unitid)
-	if class then
-		return colors[class]
-	end
+    if settings.colorType == "Use custom color" then
+        return settings.color
+    elseif settings.colorType == "Use primary stat color" then
+        local psColor = self:GetUnitPrimaryStatColor(unitid)
+        if psColor then
+            return psColor
+        end
+    elseif settings.colorType == "Use class color" then
+        local _, class = UnitClass(unitid)
+        if class then
+            return colors[class]
+        end
+    end
 
 	return colors.UNKNOWN_UNIT
 end
