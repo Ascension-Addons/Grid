@@ -52,6 +52,7 @@ end
 
 function GridStatusName:OnStatusEnable(status)
 	if status == "unit_name" then
+        self:RegisterEvent("UNIT_AURA", "UpdateUnit")
 		self:RegisterEvent("UNIT_NAME_UPDATE", "UpdateUnit")
 		self:RegisterEvent("UNIT_PORTRAIT_UPDATE", "UpdateUnit")
 		self:RegisterEvent("UNIT_ENTERED_VEHICLE", "UpdateVehicle")
@@ -124,13 +125,10 @@ function GridStatusName:UpdateGUID(guid)
 		end
 	end
 
-	-- set color
-	local color = self.core:UnitColor(guid, settings)
-
 	self.core:SendStatusGained(guid, "unit_name",
 		settings.priority,
 		nil,
-		color,
+		self.core:UnitColor(guid, settings),
 		text)
 end
 
