@@ -18,23 +18,30 @@ GridStatusName.defaultDB = {
 		enable = true,
 		color = { r = 1, g = 1, b = 1, a = 1 },
 		priority = 1,
-		class = true,
 		range = false,
+        colorType = "Use class color"
 	},
 }
 
 GridStatusName.options = false
 
 local nameOptions = {
-	["class"] = {
-		type = 'toggle',
-		name = L["Use class color"],
-		desc = L["Color by class"],
-		get = function() return GridStatusName.db.profile.unit_name.class end,
-		set = function()
-			GridStatusName.db.profile.unit_name.class = not GridStatusName.db.profile.unit_name.class
+    ["colorType"] = {
+		type = 'text',
+		name = L["Name coloring"],
+		desc = L["Set the coloring strategy for unit name"],
+		get = function()
+            return GridStatusName.db.profile.unit_name.colorType
+        end,
+		set = function(v)
+			GridStatusName.db.profile.unit_name.colorType = v
 			GridStatusName:UpdateAllUnits()
 		end,
+        validate = {
+            ["Use class color"] = L["Use class color"],
+            ["Use primary stat color"] = L["Use primary stat color"],
+            ["Use custom color"] = L["Use custom color"]
+        }
 	},
 }
 
@@ -118,7 +125,7 @@ function GridStatusName:UpdateGUID(guid)
 	end
 
 	-- set color
-	local color = settings.class and self.core:UnitColor(guid) or settings.color
+	local color = self.core:UnitColor(guid, settings)
 
 	self.core:SendStatusGained(guid, "unit_name",
 		settings.priority,

@@ -19,7 +19,7 @@ GridStatusHealth.defaultDB = {
 		priority = 30,
 		range = false,
 		deadAsFullHealth = true,
-		useClassColors = true,
+        colorType = "Use class color"
 	},
 	unit_healthDeficit = {
 		enable = true,
@@ -27,7 +27,7 @@ GridStatusHealth.defaultDB = {
 		priority = 30,
 		threshold = 80,
 		range = false,
-		useClassColors = true,
+        colorType = "Use class color"
 	},
 	alert_lowHealth = {
 		text = L["Low HP"],
@@ -78,19 +78,26 @@ GridStatusHealth.extraOptions = {
 	},
 }
 
+local colorTypeOptions = {
+    ["Use class color"] = L["Use class color"],
+    ["Use primary stat color"] = L["Use primary stat color"],
+    ["Use custom color"] = L["Use custom color"]
+}
+
 local healthOptions = {
 	["enable"] = false, -- you can't disable this
-	["useClassColors"] = {
-		type = "toggle",
-		name = L["Use class color"],
-		desc = L["Color health based on class."],
-		get = function ()
-				return GridStatusHealth.db.profile.unit_health.useClassColors
-			end,
-		set = function (v)
-				GridStatusHealth.db.profile.unit_health.useClassColors = v
-				GridStatusHealth:UpdateAllUnits()
-			end,
+    ["colorType"] = {
+		type = 'text',
+		name = L["Health coloring"],
+		desc = L["Set the coloring strategy for unit health"],
+		get = function()
+            return GridStatusHealth.db.profile.unit_health.colorType
+        end,
+		set = function(v)
+			GridStatusHealth.db.profile.unit_health.colorType = v
+			GridStatusHealth:UpdateAllUnits()
+		end,
+        validate = colorTypeOptions
 	},
 }
 
@@ -110,17 +117,18 @@ local healthDeficitOptions = {
 				GridStatusHealth:UpdateAllUnits()
 			end,
 	},
-	["useClassColors"] = {
-		type = "toggle",
-		name = L["Use class color"],
-		desc = L["Color deficit based on class."],
-		get = function ()
-				return GridStatusHealth.db.profile.unit_healthDeficit.useClassColors
-			end,
-		set = function (v)
-				GridStatusHealth.db.profile.unit_healthDeficit.useClassColors = v
-				GridStatusHealth:UpdateAllUnits()
-			end,
+    ["colorType"] = {
+		type = 'text',
+		name = L["Health deficit coloring"],
+		desc = L["Set the coloring strategy for unit health deficit"],
+		get = function()
+            return GridStatusHealth.db.profile.unit_healthDeficit.colorType
+        end,
+		set = function(v)
+			GridStatusHealth.db.profile.unit_healthDeficit.colorType = v
+			GridStatusHealth:UpdateAllUnits()
+		end,
+        validate = colorTypeOptions
 	},
 }
 
@@ -250,7 +258,7 @@ function GridStatusHealth:UpdateUnit(unitid, ignoreRange)
 		self.core:SendStatusGained(guid, "unit_healthDeficit",
 			deficitPriority,
 			(deficitSettings.range and 40),
-			(deficitSettings.useClassColors and self.core:UnitColor(guid) or deficitSettings.color),
+			self.core:UnitColor(guid, deficitSettings),
 			deficitText,
 			cur, max,
 			deficitSettings.icon)
@@ -261,7 +269,7 @@ function GridStatusHealth:UpdateUnit(unitid, ignoreRange)
 	self.core:SendStatusGained(guid, "unit_health",
 		healthPriority,
 		(not ignoreRange and healthSettings.range and 40),
-		(healthSettings.useClassColors and self.core:UnitColor(guid) or healthSettings.color),
+		self.core:UnitColor(guid, healthSettings),
 		healthText,
 		cur, max,
 		healthSettings.icon)
