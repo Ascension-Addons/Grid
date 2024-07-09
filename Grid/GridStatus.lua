@@ -599,18 +599,13 @@ function GridStatus:GetUnitPrimaryStatColor(unitid)
 end
 
 function GridStatus:UnitColor(guid, settings)
-    if settings.colorType == "Use custom color" then
-        return settings.color
-    end
 	local unitid = GridRoster:GetUnitidByGUID(guid)
-
 	if not unitid then
 		-- bad news if we can't get a unitid
 		return
 	end
 
 	local colors = self.db.profile.colors
-
 	local owner = GridRoster:GetOwnerUnitidByUnitid(unitid)
 
 	if owner then
@@ -628,7 +623,6 @@ function GridStatus:UnitColor(guid, settings)
             end
 		elseif petColorType == "By Creature Type" then
 			local creature_type = UnitCreatureType(unitid)
-
 			-- note that creature_type is nil for Shadowfiends
 			if creature_type and colors[creature_type] then
 				return colors[creature_type]
@@ -638,7 +632,9 @@ function GridStatus:UnitColor(guid, settings)
 		return colors.UNKNOWN_PET
 	end
 
-    if settings.colorType == "Use primary stat color" then
+    if settings.colorType == "Use custom color" then
+        return settings.color
+    elseif settings.colorType == "Use primary stat color" then
         local psColor = self:GetUnitPrimaryStatColor(unitid)
         if psColor then
             return psColor
