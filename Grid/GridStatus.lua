@@ -210,6 +210,13 @@ GridStatus.defaultDB = {
 --}}}
 --{{{ AceOptions table
 
+local PRIMARY_STAT_COLORS = {
+    ["Primary Stat: Agility"] = { r = 1, g = 0.96, b = 0.41, a = 1 },
+    ["Primary Stat: Intellect"] = { r = 0.25, g = 0.78, b = 0.92, a = 1 },
+    ["Primary Stat: Spirit"] = { r = 1, g = 1, b = 1, a = 1 },
+    ["Primary Stat: Strength"] = { r = 0.78, g = 0.61, b = 0.43, a = 1 }
+}
+
 GridStatus.options = {
 	type = "group",
 	name = L["Status"],
@@ -267,6 +274,13 @@ GridStatus.options = {
 					args = {
 					},
 				},
+                ["primarystat"] = {
+					type = "group",
+					name = L["Primary stat colors"],
+					desc = L["Color of player unit primary stats."],
+					args = {
+                    },
+				},
 				["creaturetype"] = {
 					type = "group",
 					name = L["Creature type colors"],
@@ -308,15 +322,10 @@ function GridStatus:FillColorOptions(options)
 	local classEnglishToLocal = {}
 	FillLocalizedClassList(classEnglishToLocal, false)
 
-	local classcolor = {}
-	for class, color in pairs(CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS) do
-		classcolor[class] = { r = color.r, g = color.g, b = color.b }
-	end
-
 	local colors = self.db.profile.colors
-	for class in pairs(classcolor) do
+	for class, color in pairs(CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS) do
 		if not colors[class] then
-			colors[class] = classcolor[class]
+			colors[class] = { r = color.r, g = color.g, b = color.b }
 		end
 		local classLocal = classEnglishToLocal[class]
 		options.args.class.args[class] = {
@@ -364,6 +373,38 @@ function GridStatus:FillColorOptions(options)
 			end,
 		}
 	end
+
+    for ps, color in pairs(PRIMARY_STAT_COLORS) do
+		if not colors[ps] then
+			colors[ps] = { r = color.r, g = color.g, b = color.b }
+		end
+		options.args.primarystat.args[ps] = {
+			type = "color",
+			name = string.sub(ps,15,-1),
+			desc = L["Color for %s."]:format(ps),
+			get = function()
+				local c = colors[ps]
+				return c.r, c.g, c.b
+			end,
+			set = function(r, g, b)
+				local c = colors[ps]
+				c.r, c.g, c.b = r, g, b
+				GridStatus:TriggerEvent("Grid_ColorsChanged")
+			end,
+		}
+	end
+
+    options.args.primarystat.args["Header"] = {
+		type = "header",
+		order = 110,
+	}
+    options.args.primarystat.args["resetprimarystatcolors"] = {
+		type = "execute",
+		name = L["Reset Primary stat colors"],
+		desc = L["Reset Primary stat colors to defaults."],
+		order = 111,
+		func = function() GridStatus:ResetPrimaryStatColors() end,
+	}
 end
 
 function GridStatus:ResetClassColors()
@@ -371,6 +412,15 @@ function GridStatus:ResetClassColors()
 	for class, class_color in pairs(CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS) do
 		local c = colors[class]
 		c.r, c.g, c.b = class_color.r, class_color.g, class_color.b
+	end
+	GridStatus:TriggerEvent("Grid_ColorsChanged")
+end
+
+function GridStatus:ResetPrimaryStatColors()
+	local colors = self.db.profile.colors
+	for ps, color in pairs(PRIMARY_STAT_COLORS) do
+		local c = colors[ps]
+		c.r, c.g, c.b = color.r, color.g, color.b
 	end
 	GridStatus:TriggerEvent("Grid_ColorsChanged")
 end
@@ -580,18 +630,11 @@ end
 --}}}
 --{{{ Unit Colors
 
-local PRIMARY_STAT_COLOR_MAP = {
-    ["Primary Stat: Agility"] = { r = 1, g = 0.96, b = 0.41, a = 1 },
-    ["Primary Stat: Intellect"] = { r = 0.25, g = 0.78, b = 0.92, a = 1 },
-    ["Primary Stat: Spirit"] = { r = 1, g = 1, b = 1, a = 1 },
-    ["Primary Stat: Strength"] = { r = 0.78, g = 0.61, b = 0.43, a = 1 }
-}
-
-function GridStatus:GetUnitPrimaryStatColor(unitid)
-    for k, v in pairs(PRIMARY_STAT_COLOR_MAP) do
+function GridStatus:GetUnitActivePrimaryStat(unitid)
+    for k, _ in pairs(PRIMARY_STAT_COLORS) do
         local name, _, _, _, _, _, _, _, _, _, _ = UnitBuff(unitid, k)
         if name then
-            return v
+            return k
         end
     end
 
@@ -617,9 +660,9 @@ function GridStatus:UnitColor(guid, settings)
 				return colors[owner_class]
 			end
         elseif petColorType == "By Owner Primary stat" then
-            local psColor = self:GetUnitPrimaryStatColor(owner)
-            if psColor then
-                return psColor
+            local owner_ps = self:GetUnitActivePrimaryStat(owner)
+            if owner_ps then
+                return colors[owner_ps]
             end
 		elseif petColorType == "By Creature Type" then
 			local creature_type = UnitCreatureType(unitid)
@@ -635,9 +678,9 @@ function GridStatus:UnitColor(guid, settings)
     if settings.colorType == "Use custom color" then
         return settings.color
     elseif settings.colorType == "Use primary stat color" then
-        local psColor = self:GetUnitPrimaryStatColor(unitid)
-        if psColor then
-            return psColor
+        local ps = self:GetUnitActivePrimaryStat(unitid)
+        if ps then
+            return colors[ps]
         end
     elseif settings.colorType == "Use class color" then
         local _, class = UnitClass(unitid)
